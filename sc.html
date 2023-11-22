@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件上传示例</title>
+  <style>
+    /* 定义一些简单的样式 */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    form {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    input[type=file] {
+      margin-right: 10px;
+    }
+
+    p {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+
+    .log {
+      margin-top: 20px;
+      border: 1px solid black;
+      padding: 10px;
+      height: 300px;
+      overflow-y: scroll;
+    }
+
+    .log-item {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>文件上传示例</h1>
+    <form id="upload-form">
+      <input type="file" id="file-input" /> <!-- 文件输入框 -->
+      <button type="submit" id="upload-button">上传</button> <!-- 上传按钮 -->
+    </form>
+    <p id="message"></p> <!-- 信息显示区域 -->
+    <div class="log" id="log"> <!-- 日志输出区域 -->
+      <p>日志：</p>
+    </div>
+  </div>
+  <script>
+    // 获取一些DOM元素的引用
+    const fileInput = document.getElementById('file-input')
+    const uploadForm = document.getElementById('upload-form')
+    const uploadButton = document.getElementById('upload-button')
+    const message = document.getElementById('message')
+    const log = document.getElementById('log')
+
+    // 定义一些常量，用于配置github的相关信息
+    const OWNER = 'laoma89' // github用户名
+    const REPO = 'gr' // github仓库名
+    const BRANCH = 'main' // github分支名
+    const TOKEN = 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6' // github token
+    const API_URL = `https://api.github.com/repos/${OWNER}/${REPO}/contents/files/` // github的API地址
+
+    // 定义一个函数，用于向日志区域添加一条信息
+    function addLogItem(text, isError) {
+      const logItem = document.createElement('div') // 创建一个div元素
+      logItem.className = 'log-item' // 设置元素的类名
+      logItem.textContent = text // 设置元素的文本内容
+      if (isError) { // 如果是错误信息
+        logItem.classList.add('error') // 添加一个error类名，用于显示红色字体
+      }
+      log.appendChild(logItem) // 将元素添加到日志区域中
+      log.scrollTop = log.scrollHeight // 将日志区域的滚动条滚动到最底部，以便查看最新的信息
+    }
+
+    // 定义一个函数，用于处理表单提交事件
+    async function handleSubmit(e) {
+      e.preventDefault() // 阻止表单的默认行为，如刷新页面
+      const file = fileInput.files[0] // 获取选择的文件对象
+      if (!file) return // 如果没有选择文件，直接返回
+      try {
+        uploadButton.disabled = true // 禁用上传按钮，防止重复提交
+        message.textContent = '' // 清空信息显示区域的内容
+        addLogItem(`开始上传文件${file.name}...`) // 添加一条日志信息，表示开始上传文件
+        const fileName = file.name // 获取文件名
+        const fileContent = await file.arrayBuffer() // 获取文件内容的ArrayBuffer格式
+        const fileBase64 = btoa(String.fromCharCode(...new Uint8Array(fileContent))) // 将文件内容转换为base64编码的字符串
+        const fileMessage = `上传文件${fileName}` // 定义文件上传的提交信息
+        const res = await fetch(API_URL + fileName, { // 发送一个PUT请求到github的API地址，拼接文件名
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${TOKEN}`, // 设置请求头，添加github的token
+            'Content-Type': 'application/json' // 设置请求头，指定请求体的格式为JSON
+          },
+          body: JSON.stringify({ // 设置请求体，将对象转换为JSON字符串
+            message: fileMessage, // 文件上传的提交信息
+            content: fileBase64, // 文件内容的base64编码
+            branch: BRANCH // 文件上传的分支名
+          })
+        })
+        const data = await res.json() // 解析响应数据为JSON格式
+        if (res.ok) { // 如果响应成功
+          message.textContent = `文件上传成功，文件名为${data.content.name}，文件大小为${data.content.size}字节` // 显示上传成功的信息
+          addLogItem(`文件上传成功，文件的sha值为${data.content.sha}`) // 添加一条日志信息，表示文件上传成功，显示文件的sha值
+        } else { // 如果响应失败
+          message.textContent = `文件上传失败，错误信息为${data.message}` // 显示上传失败的信息
+          addLogItem(`文件上传失败，错误信息为${data.message}`, true) // 添加一条日志信息，表示文件上传失败，显示错误信息，标记为错误信息
+        }
+      } catch (err) { // 捕获任何异常
+        message.textContent = `文件上传出错，错误信息为${err.message}` // 显示出错的信息
+        addLogItem(`文件上传出错，错误信息为${err.message}`, true) // 添加一条日志信息，表示文件上传出错，显示错误信息，标记为错误信息
+      } finally {
+        uploadButton.disabled = false // 启用上传按钮，恢复正常状态
+      }
+    }
+
+    // 为表单添加提交事件的监听器，绑定handleSubmit函数
+    uploadForm.addEventListener('submit', handleSubmit)
+  </script>
+</body>
+</html>
