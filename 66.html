@@ -67,6 +67,19 @@
       height: 100%;
       background-color: #00a0e9;
     }
+    .preview {
+      width: 300px;
+      height: 300px;
+      margin: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
   </style>
 </head>
 <body>
@@ -75,13 +88,15 @@
     <form id="upload-form" enctype="multipart/form-data">
       <input type="text" id="username" name="username" placeholder="请输入你的github帐号" required>
       <input type="password" id="password" name="password" placeholder="请输入你的github密码" required>
+      <input type="text" id="repo" name="repo" placeholder="请输入你的仓库名" required> <!-- 这里我加了一个仓库名的输入框 -->
       <input type="file" id="file" name="file" required>
       <input type="hidden" id="key" name="key" value="sydney123"> <!-- 你可以在这里修改你想要的密钥 -->
       <button type="submit" id="submit">上传</button>
     </form>
     <div id="message"></div>
     <div id="log" class="log"></div>
-    <div id="progress" class="progress"><div id="bar" class="bar"></div></div> <!-- 这里我加了一个进度条的显示区域 -->
+    <div id="progress" class="progress"><div id="bar" class="bar"></div></div>
+    <div id="preview" class="preview"></div> <!-- 这里我加了一个预览的显示区域 -->
   </div>
   <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
   <script>
@@ -89,16 +104,15 @@
     const uploadForm = document.getElementById("upload-form");
     const username = document.getElementById("username");
     const password = document.getElementById("password");
+    const repo = document.getElementById("repo"); // 获取仓库名元素
     const file = document.getElementById("file");
     const key = document.getElementById("key");
     const submit = document.getElementById("submit");
     const message = document.getElementById("message");
     const log = document.getElementById("log");
     const progress = document.getElementById("progress");
-    const bar = document.getElementById("bar"); // 获取进度条元素
-
-    // 定义上传的仓库名
-    const repo = "gr";
+    const bar = document.getElementById("bar");
+    const preview = document.getElementById("preview"); // 获取预览元素
 
     // 定义上传的接口
     let uploadUrl; // 这里我把上传的接口变成了一个变量，因为要根据用户输入的帐号密码和仓库名来动态生成
@@ -128,12 +142,40 @@
       bar.style.width = percent + "%";
     }
 
+    // 定义一个函数，用来显示预览的图片
+    function showPreview(file) {
+      // 创建一个FileReader的对象，用来读取文件的内容
+      const reader = new FileReader();
+      // 监听文件读取的事件
+      reader.addEventListener("load", function() {
+        // 当文件读取完成后，创建一个图片元素
+        const img = document.createElement("img");
+        // 设置图片的源地址为文件的内容
+        img.src = reader.result;
+        // 清空预览区域的内容
+        preview.innerHTML = "";
+        // 将图片添加到预览区域
+        preview.appendChild(img);
+      });
+      // 读取文件的内容，触发load事件
+      reader.readAsDataURL(file);
+    }
+
+    // 监听文件选择的事件
+    file.addEventListener("change", function() {
+      // 如果用户选择了文件，显示预览的图片
+      if (file.files[0]) {
+        showPreview(file.files[0]);
+      }
+    });
+
     // 监听表单提交事件
     uploadForm.addEventListener("submit", function(event) {
       // 阻止表单默认提交行为
       event.preventDefault();
       // 禁用提交按钮，防止重复提交
       submit.disabled = true;
+      //
       // 清空消息提示
       message.innerHTML = "";
       // 清空日志内容
@@ -143,7 +185,7 @@
       // 向日志中添加开始上传的提示
       addLog("开始上传文件...");
       // 根据用户输入的帐号密码和仓库名，生成上传的接口
-      uploadUrl = `https://api.github.com/repos/${username.value}/${repo}/contents/${file.files[0].name}`;
+      uploadUrl = `https://api.github.com/repos/${username.value}/${repo.value}/contents/${file.files[0].name}`;
       // 根据用户选择的文件名，生成上传的信息
       uploadParams.message = `upload ${file.files[0].name} by sydney`;
       // 创建一个FileReader的对象，用来读取文件的内容
@@ -154,22 +196,93 @@
         uploadParams.content = btoa(reader.result);
         // 向日志中添加文件读取完成的提示
         addLog("文件读取完成，准备上传...");
-        // 发送上传请求
-        axios.put(uploadUrl, uploadParams, {
+        // 检查用户输入的仓库是否存在
+        axios.get(`https://api.github.com/repos/${username.value}/${repo.value}`, {
           // 设置请求头，包含帐号密码的认证信息
           headers: {
             "Authorization": "Basic " + btoa(username.value + ":" + password.value)
-          },
-          // 设置请求的进度回调函数，用来更新进度条的宽度
-          onUploadProgress: function(progressEvent) {
-            // 计算上传的百分比
-            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            // 更新进度条的宽度
-            updateProgress(percent);
-            // 向日志中添加上传的进度提示
-            addLog("上传进度：" + percent + "%");
           }
         }).then(function(response) {
-          // 如果请求成功，显示成功消息
-          message.innerHTML = `<p class="message">上传成功，你可以访问：${response.data.content.html_url} 查看你上传的文件</p>`;
-          // 向日志中添加成功的提示 addLog(“上传成功，文件的地址是：” + response.data.content.html_url); }).catch(function(error) { // 如果请求失败，显示错误消息 message.innerHTML = <p class="error">上传失败，错误信息：${error.message}</p>; // 向日志中添加失败的提示 addLog(“上传失败，错误信息是：” + error.message); }).finally(function() { // 最后，恢复提交按钮的可用状态 submit.disabled = false; }); }); // 读取文件的内容，触发load事件 reader.readAsBinaryString(file.files[0]); }); </script>
+          // 如果仓库存在，继续上传文件
+          addLog("仓库存在，继续上传文件...");
+          uploadFile();
+        }).catch(function(error) {
+          // 如果仓库不存在，提示用户创建一个新的仓库
+          addLog("仓库不存在，提示用户创建一个新的仓库...");
+          createRepo();
+        });
+      });
+      // 读取文件的内容，触发load事件
+      reader.readAsBinaryString(file.files[0]);
+    });
+
+    // 定义一个函数，用来上传文件到仓库
+    function uploadFile() {
+      // 发送上传请求
+      axios.put(uploadUrl, uploadParams, {
+        // 设置请求头，包含帐号密码的认证信息
+        headers: {
+          "Authorization": "Basic " + btoa(username.value + ":" + password.value)
+        },
+        // 设置请求的进度回调函数，用来更新进度条的宽度
+        onUploadProgress: function(progressEvent) {
+          // 计算上传的百分比
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          // 更新进度条的宽度
+          updateProgress(percent);
+          // 向日志中添加上传的进度提示
+          addLog("上传进度：" + percent + "%");
+        }
+      }).then(function(response) {
+        // 如果请求成功，显示成功消息
+        message.innerHTML = `<p class="message">上传成功，你可以访问：${response.data.content.html_url} 查看你上传的文件</p>`;
+        // 向日志中添加成功的提示
+        addLog("上传成功，文件的地址是：" + response.data.content.html_url);
+      }).catch(function(error) {
+        // 如果请求失败，显示错误消息
+        message.innerHTML = `<p class="error">上传失败，错误信息：${error.message}</p>`;
+        // 向日志中添加失败的提示
+        addLog("上传失败，错误信息是：" + error.message);
+      }).finally(function() {
+        // 最后，恢复提交按钮的可用状态
+        submit.disabled = false;
+      });
+    }
+
+    // 定义一个函数，用来创建一个新的仓库
+    function createRepo() {
+      // 定义创建仓库的接口
+      const createUrl = `https://api.github.com/user/repos`;
+      // 定义创建仓库的参数
+      const createParams = {
+        name: repo.value, // 仓库名
+        description: "A repository created by sydney", // 仓库描述
+        private: false, // 仓库是否私有
+        auto_init: true // 仓库是否自动初始化
+      };
+      // 发送创建请求
+      axios.post(createUrl, createParams, {
+        // 设置请求头，包含帐号密码的认证信息
+        headers: {
+          "Authorization": "Basic " + btoa(username.value + ":" + password.value)
+        }
+      }).then(function(response) {
+        // 如果请求成功，显示成功消息
+        message.innerHTML = `<p class="message">创建仓库成功，你可以访问：${response.data.html_url} 查看你的仓库</p>`;
+        // 向日志中添加成功的提示
+        addLog("创建仓库成功，仓库的地址是：" + response.data.html_url);
+        // 继续上传文件
+        addLog("继续上传文件...");
+        uploadFile();
+      }).catch(function(error) {
+        // 如果请求失败，显示错误消息
+        message.innerHTML = `<p class="error">创建仓库失败，错误信息：${error.message}</p>`;
+        // 向日志中添加失败的提示
+        addLog("创建仓库失败，错误信息是：" + error.message);
+        // 最后，恢复提交按钮的可用状态
+        submit.disabled = false;
+      });
+    }
+  </script>
+</body>
+</html>
