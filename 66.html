@@ -26,7 +26,6 @@
     </p>
   </form>
   <div id="result"></div>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
     // 获取表单元素
     const form = document.getElementById("upload-form");
@@ -71,32 +70,22 @@
         // 构造请求地址
         const url = "https://api.github.com/repos/" + username.value + "/" + repo.value + "/contents/" + fileName;
         // 发送put请求，上传文件到github仓库
-        axios.put(url, payload, {
+        fetch(url, {
+          method: "PUT",
           headers: {
-            "Authorization": "Basic " + token
-          }
+            "Authorization": "Basic " + token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
         }).then(function (response) {
           // 上传成功，显示结果
           result.innerHTML = "<p>上传成功！</p>";
+          // 返回json数据
+          return response.json();
+        }).then(function (data) {
           // 获取文件的sha值
-          const sha = response.data.content.sha;
+          const sha = data.content.sha;
           // 构造cdn链接
           const cdnUrl = "https://cdn.jsdelivr.net/gh/" + username.value + "/" + repo.value + "/" + fileName;
           // 显示cdn链接
-          result.innerHTML += "<p>cdn链接：<a href='" + cdnUrl + "' target='_blank'>" + cdnUrl + "</a></p>";
-          // 显示文件的sha值
-          result.innerHTML += "<p>文件sha值：" + sha + "</p>";
-          // 启用提交按钮
-          submit.disabled = false;
-        }).catch(function (error) {
-          // 上传失败，显示错误信息
-          result.innerHTML = "<p>上传失败！</p>";
-          result.innerHTML += "<p>错误信息：" + error.message + "</p>";
-          // 启用提交按钮
-          submit.disabled = false;
-        });
-      };
-    });
-  </script>
-</body>
-</html>
+          result.innerHTML += "<p>cdn链接
