@@ -54,6 +54,19 @@
       padding: 5px;
       overflow-y: scroll;
     }
+    .progress {
+      width: 600px;
+      height: 20px;
+      margin: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .bar {
+      width: 0%;
+      height: 100%;
+      background-color: #00a0e9;
+    }
   </style>
 </head>
 <body>
@@ -62,12 +75,13 @@
     <form id="upload-form" enctype="multipart/form-data">
       <input type="text" id="username" name="username" placeholder="请输入你的github帐号" required>
       <input type="password" id="password" name="password" placeholder="请输入你的github密码" required>
-      <input type="file" id="file" name="file" required> <!-- 这里我去掉了文件类型的限制 -->
+      <input type="file" id="file" name="file" required>
       <input type="hidden" id="key" name="key" value="sydney123"> <!-- 你可以在这里修改你想要的密钥 -->
       <button type="submit" id="submit">上传</button>
     </form>
     <div id="message"></div>
-    <div id="log" class="log"></div> <!-- 这里我加了一个日志的显示区域 -->
+    <div id="log" class="log"></div>
+    <div id="progress" class="progress"><div id="bar" class="bar"></div></div> <!-- 这里我加了一个进度条的显示区域 -->
   </div>
   <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
   <script>
@@ -79,7 +93,9 @@
     const key = document.getElementById("key");
     const submit = document.getElementById("submit");
     const message = document.getElementById("message");
-    const log = document.getElementById("log"); // 获取日志元素
+    const log = document.getElementById("log");
+    const progress = document.getElementById("progress");
+    const bar = document.getElementById("bar"); // 获取进度条元素
 
     // 定义上传的仓库名
     const repo = "gr";
@@ -106,6 +122,12 @@
       log.scrollTop = log.scrollHeight;
     }
 
+    // 定义一个函数，用来更新进度条的宽度
+    function updateProgress(percent) {
+      // 设置进度条的宽度为百分比
+      bar.style.width = percent + "%";
+    }
+
     // 监听表单提交事件
     uploadForm.addEventListener("submit", function(event) {
       // 阻止表单默认提交行为
@@ -116,35 +138,38 @@
       message.innerHTML = "";
       // 清空日志内容
       log.innerHTML = "";
+      // 清空进度条的宽度
+      updateProgress(0);
       // 向日志中添加开始上传的提示
       addLog("开始上传文件...");
       // 根据用户输入的帐号密码和仓库名，生成上传的接口
       uploadUrl = `https://api.github.com/repos/${username.value}/${repo}/contents/${file.files[0].name}`;
       // 根据用户选择的文件名，生成上传的信息
       uploadParams.message = `upload ${file.files[0].name} by sydney`;
-      // 根据用户选择的文件，生成上传的内容
-      uploadParams.content = btoa(file.files[0]); // 将文件转换为base64编码
-      // 发送上传请求
-      axios.put(uploadUrl, uploadParams, {
-        // 设置请求头，包含帐号密码的认证信息
-        headers: {
-          "Authorization": "Basic " + btoa(username.value + ":" + password.value)
-        }
-      }).then(function(response) {
-        // 如果请求成功，显示成功消息
-        message.innerHTML = `<p class="message">上传成功，你可以访问：${response.data.content.html_url} 查看你上传的文件</p>`;
-        // 向日志中添加成功的提示
-        addLog("上传成功，文件的地址是：" + response.data.content.html_url);
-      }).catch(function(error) {
-        // 如果请求失败，显示错误消息
-        message.innerHTML = `<p class="error">上传失败，错误信息：${error.message}</p>`;
-        // 向日志中添加失败的提示
-        addLog("上传失败，错误信息是：" + error.message);
-      }).finally(function() {
-        // 最后，恢复提交按钮的可用状态
-        submit.disabled = false;
-      });
-    });
-  </script>
-</body>
-</html>
+      // 创建一个FileReader的对象，用来读取文件的内容
+      const reader = new FileReader();
+      // 监听文件读取的事件
+      reader.addEventListener("load", function() {
+        // 当文件读取完成后，将文件的内容转换为base64编码，赋值给上传的参数
+        uploadParams.content = btoa(reader.result);
+        // 向日志中添加文件读取完成的提示
+        addLog("文件读取完成，准备上传...");
+        // 发送上传请求
+        axios.put(uploadUrl, uploadParams, {
+          // 设置请求头，包含帐号密码的认证信息
+          headers: {
+            "Authorization": "Basic " + btoa(username.value + ":" + password.value)
+          },
+          // 设置请求的进度回调函数，用来更新进度条的宽度
+          onUploadProgress: function(progressEvent) {
+            // 计算上传的百分比
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            // 更新进度条的宽度
+            updateProgress(percent);
+            // 向日志中添加上传的进度提示
+            addLog("上传进度：" + percent + "%");
+          }
+        }).then(function(response) {
+          // 如果请求成功，显示成功消息
+          message.innerHTML = `<p class="message">上传成功，你可以访问：${response.data.content.html_url} 查看你上传的文件</p>`;
+          // 向日志中添加成功的提示 addLog(“上传成功，文件的地址是：” + response.data.content.html_url); }).catch(function(error) { // 如果请求失败，显示错误消息 message.innerHTML = <p class="error">上传失败，错误信息：${error.message}</p>; // 向日志中添加失败的提示 addLog(“上传失败，错误信息是：” + error.message); }).finally(function() { // 最后，恢复提交按钮的可用状态 submit.disabled = false; }); }); // 读取文件的内容，触发load事件 reader.readAsBinaryString(file.files[0]); }); </script>
