@@ -1,76 +1,112 @@
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>文件上传</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/4.16.13/antd.min.css">
+  <title>上传功能的接口</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+    }
+    .container {
+      width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    input, button {
+      width: 300px;
+      height: 40px;
+      margin: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+      padding: 5px;
+    }
+    button {
+      background-color: #00a0e9;
+      color: #fff;
+      cursor: pointer;
+    }
+    .message {
+      color: green;
+      font-weight: bold;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/4.16.13/antd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js"></script>
+  <div class="container">
+    <h1>上传功能的接口</h1>
+    <form id="upload-form" enctype="multipart/form-data">
+      <input type="text" id="username" name="username" placeholder="请输入你的github帐号" required>
+      <input type="password" id="password" name="password" placeholder="请输入你的github密码" required>
+      <input type="file" id="file" name="file" accept="image/gif" required>
+      <input type="hidden" id="key" name="key" value="sydney123"> <!-- 你可以在这里修改你想要的密钥 -->
+      <button type="submit" id="submit">上传</button>
+    </form>
+    <div id="message"></div>
+  </div>
+  <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
   <script>
-    const { useState } = React;
-    const { Upload, Button, message, Input, Form } = antd;
-    const { UploadOutlined } = antd.icons;
+    // 获取表单元素
+    const uploadForm = document.getElementById("upload-form");
+    const username = document.getElementById("username");
+    const password = document.getElementById("password");
+    const file = document.getElementById("file");
+    const key = document.getElementById("key");
+    const submit = document.getElementById("submit");
+    const message = document.getElementById("message");
 
-    function App() {
-      const [file, setFile] = useState(null);
-      const [token, setToken] = useState("");
-      const [key, setKey] = useState("");
+    // 定义上传的仓库名
+    const repo = "gr";
 
-      const handleChange = (info) => {
-        if (info.file.status === "done") {
-          setFile(info.file.originFileObj);
+    // 定义上传的接口
+    const uploadUrl = `https://api.github.com/repos/${username.value}/${repo}/contents/${file.files[0].name}`;
+
+    // 定义上传的参数
+    const uploadParams = {
+      message: `upload ${file.files[0].name} by sydney`,
+      content: btoa(file.files[0]), // 将文件转换为base64编码
+      key: key.value // 传递密钥
+    };
+
+    // 监听表单提交事件
+    uploadForm.addEventListener("submit", function(event) {
+      // 阻止表单默认提交行为
+      event.preventDefault();
+      // 禁用提交按钮，防止重复提交
+      submit.disabled = true;
+      // 清空消息提示
+      message.innerHTML = "";
+      // 发送上传请求
+      axios.put(uploadUrl, uploadParams, {
+        // 设置请求头，包含帐号密码的认证信息
+        headers: {
+          "Authorization": "Basic " + btoa(username.value + ":" + password.value)
         }
-      };
-
-      const handleSubmit = async () => {
-        if (!file || !token || !key) {
-          message.error("请填写完整的信息");
-          return;
-        }
-        const formData = new FormData();
-        formData.append("file", file);
-        try {
-          const res = await axios.post(`https://v.zzsp.eu.org/api/file?token=${token}`, formData, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              "Authorization": key
-            }
-          });
-          message.success("上传成功");
-          console.log(res.data);
-        } catch (err) {
-          message.error("上传失败");
-          console.error(err);
-        }
-      };
-
-      return (
-        <div style={{ width: "600px", margin: "0 auto", padding: "50px" }}>
-          <h1 style={{ textAlign: "center" }}>文件上传</h1>
-          <Form layout="vertical" onFinish={handleSubmit}>
-            <Form.Item label="选择文件">
-              <Upload name="file" onChange={handleChange} showUploadList={false}>
-                <Button icon={<UploadOutlined />}>点击上传</Button>
-              </Upload>
-            </Form.Item>
-            <Form.Item label="输入API">
-              <Input value={token} onChange={(e) => setToken(e.target.value)} placeholder="请输入API" />
-            </Form.Item>
-            <Form.Item label="输入密钥">
-              <Input value={key} onChange={(e) => setKey(e.target.value)} placeholder="请输入密钥" />
-            </Form.Item>
-            <Form.Item>
-              <Button type="primary" htmlType="submit">提交</Button>
-            </Form.Item>
-          </Form>
-        </div>
-      );
-    }
-
-    ReactDOM.render(<App />, document.getElementById("root"));
+      }).then(function(response) {
+        // 如果请求成功，显示成功消息
+        message.innerHTML = `<p class="message">上传成功，你可以访问：${response.data.content.html_url} 查看你上传的文件</p>`;
+      }).catch(function(error) {
+        // 如果请求失败，显示错误消息
+        message.innerHTML = `<p class="error">上传失败，错误信息：${error.message}</p>`;
+      }).finally(function() {
+        // 最后，恢复提交按钮的可用状态
+        submit.disabled = false;
+      });
+    });
   </script>
+</body>
 </html>
