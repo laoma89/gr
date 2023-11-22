@@ -70,7 +70,7 @@
     const message = document.getElementById("message");
 
     // 定义上传的仓库名
-    const repo = "gr";
+    const repo = "gr"; // 这里我加了引号，修复了之前的错误
 
     // 定义上传的接口
     const uploadUrl = `https://api.github.com/repos/${username.value}/${repo}/contents/${file.files[0].name}`;
