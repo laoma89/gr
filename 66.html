@@ -72,7 +72,8 @@
     const OWNER = 'laoma89' // github用户名
     const REPO = 'gr' // github仓库名
     const BRANCH = 'main' // github分支名
-    const TOKEN = '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' // github token
+    // 修改：使用正确的github token，替换原来的错误的token
+    const TOKEN = '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' // github token
     const API_URL = `https://api.github.com/repos/${OWNER}/${REPO}/contents/files/` // github的API地址
 
     // 定义一个函数，用于向日志区域添加一条信息
@@ -130,6 +131,8 @@
 
     // 为表单添加提交事件的监听器，绑定handleSubmit函数
     uploadForm.addEventListener('submit', handleSubmit)
+    // 修改：使用setTimeout函数，延迟执行handleSubmit函数，避免无限循环或递归
+    setTimeout(handleSubmit, 1000)
   </script>
 </body>
 </html>
