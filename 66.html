@@ -130,11 +130,30 @@
       // 获取表单数据
       const formData = new FormData(uploadForm);
 
+      // 获取Github用户名和密码
+      const githubUsername = formData.get("github-username");
+      const githubPassword = formData.get("github-password");
+
+      // 获取文件
+      const file = formData.get("file");
+
+      // 获取密钥
+      const key = "123456"; // 这里是密钥，你可以根据需要修改
+
+      // 创建一个新的表单数据对象，用于发送请求
+      const newFormData = new FormData();
+      newFormData.append("github-username", githubUsername);
+      newFormData.append("github-password", githubPassword);
+      newFormData.append("file", file);
+
       // 发送请求到API接口
       try {
         const res = await fetch("/api/upload", {
           method: "POST",
-          body: formData,
+          body: newFormData,
+          headers: {
+            "x-secret-key": key, // 设置请求头，传递密钥
+          },
         });
 
         // 处理响应
