@@ -184,7 +184,7 @@
       // 向日志中添加开始上传的提示
       addLog("开始上传文件...");
       // 根据用户输入的帐号密码和仓库名，生成上传的接口
-      uploadUrl = `https://v.zzsp.eu.org/66.html/posts/${username.value}/${repo.value}/${file.files[0].name}`; // 这里我把上传的接口地址改成了你的网页地址，也就是https://v.zzsp.eu.org/66.html，然后在后面加上/posts，这样就可以访问到你的网页的接口了
+      uploadUrl = `https://api.github.com/repos/${username.value}/${repo.value}/contents/${file.files[0].name}`;
       // 根据用户选择的文件名，生成上传的信息
       uploadParams.message = `upload ${file.files[0].name} by sydney`;
       // 创建一个FileReader的对象，用来读取文件的内容
@@ -196,7 +196,7 @@
         // 向日志中添加文件读取完成的提示
         addLog("文件读取完成，准备上传...");
         // 发送上传请求
-        axios.post(uploadUrl, uploadParams, { // 这里我把请求方法改成了post，因为你的网页的接口是post方法
+        axios.put(uploadUrl, uploadParams, {
           // 设置请求头，包含帐号密码的认证信息
           headers: {
             "Authorization": "Basic " + btoa(username.value + ":" + password.value)
@@ -211,18 +211,10 @@
             addLog("上传进度：" + percent + "%");
           }
         }).then(function(response) {
-          // 如果请求成功，判断返回的状态码是否是200
-          if (response.status === 200) { // 这里我加了一个判断，如果返回的状态码是200，说明上传成功
-            // 显示成功消息
-            message.innerHTML = `<p class="message">上传成功，你可以访问：${response.data.content.html_url} 查看你上传的文件</p>`;
-            // 向日志中添加成功的提示
-            addLog("上传成功，文件的地址是：" + response.data.content.html_url);
-          } else { // 如果返回的状态码不是200，说明上传失败
-            // 显示错误消息
-            message.innerHTML = `<p class="error">上传失败，错误信息：${response.data.message}</p>`;
-            // 向日志中添加失败的提示
-            addLog("上传失败，错误信息是：" + response.data.message);
-          }
+          // 如果请求成功，显示成功消息
+          message.innerHTML = `<p class="message">上传成功，你可以访问：${response.data.content.html_url} 查看你上传的文件</p>`;
+          // 向日志中添加成功的提示
+          addLog("上传成功，文件的地址是：" + response.data.content.html_url);
         }).catch(function(error) {
           // 如果请求失败，显示错误消息
           message.innerHTML = `<p class="error">上传失败，错误信息：${error.message}</p>`;
