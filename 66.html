@@ -44,6 +44,16 @@
       color: red;
       font-weight: bold;
     }
+    .log {
+      width: 600px;
+      height: 200px;
+      margin: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+      padding: 5px;
+      overflow-y: scroll;
+    }
   </style>
 </head>
 <body>
@@ -52,11 +62,12 @@
     <form id="upload-form" enctype="multipart/form-data">
       <input type="text" id="username" name="username" placeholder="请输入你的github帐号" required>
       <input type="password" id="password" name="password" placeholder="请输入你的github密码" required>
-      <input type="file" id="file" name="file" accept="image/gif" required>
+      <input type="file" id="file" name="file" required> <!-- 这里我去掉了文件类型的限制 -->
       <input type="hidden" id="key" name="key" value="sydney123"> <!-- 你可以在这里修改你想要的密钥 -->
       <button type="submit" id="submit">上传</button>
     </form>
     <div id="message"></div>
+    <div id="log" class="log"></div> <!-- 这里我加了一个日志的显示区域 -->
   </div>
   <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
   <script>
@@ -68,19 +79,32 @@
     const key = document.getElementById("key");
     const submit = document.getElementById("submit");
     const message = document.getElementById("message");
+    const log = document.getElementById("log"); // 获取日志元素
 
     // 定义上传的仓库名
-    const repo = "gr"; // 这里我加了引号，修复了之前的错误
+    const repo = "gr";
 
     // 定义上传的接口
-    const uploadUrl = `https://api.github.com/repos/${username.value}/${repo}/contents/${file.files[0].name}`;
+    let uploadUrl; // 这里我把上传的接口变成了一个变量，因为要根据用户输入的帐号密码和仓库名来动态生成
 
     // 定义上传的参数
     const uploadParams = {
-      message: `upload ${file.files[0].name} by sydney`,
-      content: btoa(file.files[0]), // 将文件转换为base64编码
+      message: "", // 这里我把上传的信息也变成了一个变量，因为要根据用户选择的文件名来动态生成
+      content: "", // 这里我把上传的内容也变成了一个变量，因为要根据用户选择的文件来动态生成
       key: key.value // 传递密钥
     };
+
+    // 定义一个函数，用来向日志中添加内容
+    function addLog(content) {
+      // 创建一个新的段落元素
+      const p = document.createElement("p");
+      // 设置段落的文本内容为传入的内容
+      p.textContent = content;
+      // 将段落添加到日志的最后
+      log.appendChild(p);
+      // 将日志的滚动条滚动到最底部，方便查看最新的内容
+      log.scrollTop = log.scrollHeight;
+    }
 
     // 监听表单提交事件
     uploadForm.addEventListener("submit", function(event) {
@@ -90,6 +114,16 @@
       submit.disabled = true;
       // 清空消息提示
       message.innerHTML = "";
+      // 清空日志内容
+      log.innerHTML = "";
+      // 向日志中添加开始上传的提示
+      addLog("开始上传文件...");
+      // 根据用户输入的帐号密码和仓库名，生成上传的接口
+      uploadUrl = `https://api.github.com/repos/${username.value}/${repo}/contents/${file.files[0].name}`;
+      // 根据用户选择的文件名，生成上传的信息
+      uploadParams.message = `upload ${file.files[0].name} by sydney`;
+      // 根据用户选择的文件，生成上传的内容
+      uploadParams.content = btoa(file.files[0]); // 将文件转换为base64编码
       // 发送上传请求
       axios.put(uploadUrl, uploadParams, {
         // 设置请求头，包含帐号密码的认证信息
@@ -99,9 +133,13 @@
       }).then(function(response) {
         // 如果请求成功，显示成功消息
         message.innerHTML = `<p class="message">上传成功，你可以访问：${response.data.content.html_url} 查看你上传的文件</p>`;
+        // 向日志中添加成功的提示
+        addLog("上传成功，文件的地址是：" + response.data.content.html_url);
       }).catch(function(error) {
         // 如果请求失败，显示错误消息
         message.innerHTML = `<p class="error">上传失败，错误信息：${error.message}</p>`;
+        // 向日志中添加失败的提示
+        addLog("上传失败，错误信息是：" + error.message);
       }).finally(function() {
         // 最后，恢复提交按钮的可用状态
         submit.disabled = false;
