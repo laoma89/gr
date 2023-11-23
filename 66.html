@@ -73,7 +73,8 @@
     const REPO = 'gr' // github仓库名
     const BRANCH = 'main' // github分支名
     const TOKEN = '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' // github token
-    const API_URL = `https://api.github.com/repos/${OWNER}/${REPO}/contents/files/` // github的API地址
+    const API_URL = `https://api.github.com/repos/${OWNER}/${REPO}/contents/` // github的API地址
+    const FILE_URL = `https://v.zzsp.eu.org/files/` // 文件的URL地址
 
     // 定义一个函数，用于向日志区域添加一条信息
     function addLogItem(text, isError) {
@@ -85,6 +86,11 @@
       }
       log.appendChild(logItem) // 将元素添加到日志区域中
       log.scrollTop = log.scrollHeight // 将日志区域的滚动条滚动到最底部，以便查看最新的信息
+    }
+
+    // 定义一个函数，用于生成文件的URL路径
+    function getFileUrl(fileName) {
+      return FILE_URL + fileName // 使用文件的URL地址，拼接文件名和后缀
     }
 
     // 定义一个函数，用于处理表单提交事件
@@ -116,6 +122,7 @@
         if (res.ok) { // 如果响应成功
           message.textContent = `文件上传成功，文件名为${data.content.name}，文件大小为${data.content.size}字节` // 显示上传成功的信息
           addLogItem(`文件上传成功，文件的sha值为${data.content.sha}`) // 添加一条日志信息，表示文件上传成功，显示文件的sha值
+          addLogItem(`文件的URL路径为${getFileUrl(fileName)}`) // 添加一条日志信息，表示文件的URL路径，使用getFileUrl函数生成
         } else { // 如果响应失败
           message.textContent = `文件上传失败，错误信息为${data.message}` // 显示上传失败的信息
           addLogItem(`文件上传失败，错误信息为${data.message}`, true) // 添加一条日志信息，表示文件上传失败，显示错误信息，标记为错误信息
@@ -130,6 +137,8 @@
 
     // 为表单添加提交事件的监听器，绑定handleSubmit函数
     uploadForm.addEventListener('submit', handleSubmit)
+    // 修改：使用setTimeout函数，延迟执行handleSubmit函数，避免无限循环或递归
+    setTimeout(handleSubmit, 1000)
   </script>
 </body>
 </html>
