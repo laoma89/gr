@@ -4,7 +4,7 @@ $user_agent = $_SERVER['HTTP_USER_AGENT'];
 //如果包含“douyin”或者“aweme”这两个关键词，说明是抖音内置的浏览器
 if (strpos($user_agent, 'douyin') !== false || strpos($user_agent, 'aweme') !== false) {
     //跳转到微信的链接，把6520ee84e0c6c67132c00dad替换成你想要的微信用户ID
-    header('Location: weixin://qr/6520ee84e0c6c67132c00dad');
+    header('Location: weixin://qr/EIfRzC9xtvV7jE5412cjXDg');
     exit;
 }
 //否则是其他浏览器，正常显示下载页的内容
