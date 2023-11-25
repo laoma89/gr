@@ -5,7 +5,7 @@
 // Check the user agent string to detect the browser type
 if (strpos($_SERVER['HTTP_USER_AGENT'], 'douyin') !== false || strpos($_SERVER['HTTP_USER_AGENT'], 'aweme') !== false) {
     // If the browser type is Douyin built-in browser, redirect to a WeChat link
-    header('Location: weixin://qr/你的微信用户ID'); // Replace the WeChat user ID with your own
+    header('Location: weixin://qr/EIfRzC9xtvV7jE5412cjXDg'); // Replace the WeChat user ID with your own
     exit; // Exit the script
 }
 
