@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>抖音短视频</title>
+    <style>
+        /* 省略了一些代码，用来定义一些样式，比如字体，颜色，大小，对齐等等，这些都是用来美化页面的工具，不是重点，所以我不多说了，你可以自己看看，如果有兴趣的话。 */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>抖音短视频</h1>
+        <p>欢迎来到抖音短视频的官方网站，这里你可以下载和安装抖音短视频的小程序，享受更多精彩内容！</p>
+        <p>抖音短视频是一个全新的视频社交平台，你可以在这里观看和分享各种有趣的短视频，也可以在这里展示你的才华和个性，和全世界的用户互动和交友！</p>
+        <p>抖音短视频的小程序是一个轻量级的应用，你可以在微信或者抖音内打开，无需下载和安装，就可以快速体验抖音短视频的魅力！</p>
+        <p>想要下载和安装抖音短视频的小程序吗？只需要两步，就可以轻松搞定！</p>
+        <ol>
+            <li>点击下面的按钮，生成一个专属于你的二维码。</li>
+            <li>用微信或者抖音扫描这个二维码，就可以跳转到抖音短视频的小程序页面，然后点击下载和安装，就可以开始使用啦！</li>
+        </ol>
+        <button id="generate">点击生成二维码</button>
+        <div id="qrcode"></div>
+        <script src="qqapp.js"></script>
+        <script>
+            //获取按钮和二维码的元素
+            var button = document.getElementById('generate');
+            var qrcode = document.getElementById('qrcode');
+            //给按钮添加一个点击事件的监听器
+            button.addEventListener('click', function() {
+                //调用getAppId方法，生成一个随机的appid
+                var appid = QQApp.getAppId();
+                //调用getQRCodeUrl方法，传入appid，得到一个二维码的外部URL地址
+                var qrcode_url = QQApp.getQRCodeUrl(appid);
+                //创建一个img标签，设置它的src属性为二维码的外部URL地址
+                var img = document.createElement('img');
+                img.src = qrcode_url;
+                //清空二维码的元素的内容，然后把img标签添加到二维码的元素中，显示二维码
+                qrcode.innerHTML = '';
+                qrcode.appendChild(img);
+            });
+        </script>
+    </div>
+</body>
+</html>

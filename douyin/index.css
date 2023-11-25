@@ -1,0 +1,56 @@
+/* 定义一个全局的样式，用来设置网页的字体，背景色，边距等等 */
+* {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+}
+
+/* 定义一个容器的样式，用来设置容器的宽度，居中，边框，内边距等等 */
+.container {
+    width: 800px;
+    margin: 0 auto;
+    border: 1px solid #ccc;
+    padding: 20px;
+}
+
+/* 定义一个标题的样式，用来设置标题的颜色，大小，对齐等等 */
+h1 {
+    color: #333;
+    font-size: 36px;
+    text-align: center;
+}
+
+/* 定义一个段落的样式，用来设置段落的颜色，大小，行高，间距等等 */
+p {
+    color: #666;
+    font-size: 18px;
+    line-height: 1.5;
+    margin: 10px 0;
+}
+
+/* 定义一个列表的样式，用来设置列表的颜色，大小，行高，间距，列表项符号等等 */
+ol {
+    color: #666;
+    font-size: 18px;
+    line-height: 1.5;
+    margin: 10px 0;
+    list-style-type: decimal;
+}
+
+/* 定义一个按钮的样式，用来设置按钮的颜色，大小，边框，内边距，光标等等 */
+button {
+    color: #fff;
+    font-size: 18px;
+    background-color: #333;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+/* 定义一个二维码的样式，用来设置二维码的宽度，高度，居中等等 */
+#qrcode {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+}
